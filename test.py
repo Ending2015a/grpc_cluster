@@ -6,6 +6,10 @@ config_path = 'cluster_config.yml'
 
 cluster = Cluster(config_path)
 
+
+print('worker_num: {}'.format(cluster.get_worker_num()))
+print('proxy_num: {}'.format(cluster.get_proxy_num()))
+
 def generate_sample(num):
     return random.sample(range(1 ,100), num)
     

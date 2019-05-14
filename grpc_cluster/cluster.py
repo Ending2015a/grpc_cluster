@@ -98,6 +98,7 @@ class Cluster(object):
             self._mapping_task = {}
             self._receive_data_event = threading.Event()
             self._result_queue = collections.deque()
+            self._worker_num = 0
             
             loadConfig()
             self.LOG = createLoggerFromExistedLogger(logger_name, logger_level)
@@ -123,6 +124,7 @@ class Cluster(object):
                 
             self._proxy_client[name] = proxy
             
+
             if self._proxy_client[name].client.welcome() != None:
                 self._proxy_client[name].alive = True
                 if self._proxy_client[name].client.login('admin', 'admin') == None:
@@ -154,7 +156,8 @@ class Cluster(object):
             
             if not proxy_name in self._worker_client:
                 self._worker_client[proxy_name] = {}
-                
+            
+            self._worker_num += 1                
             self._worker_client[proxy_name][worker.name] = worker
         
         def _create_venv(self, proxy_name, venv_name, venv_params, venv_requirements):
@@ -213,8 +216,12 @@ class Cluster(object):
                 
                 if self.check_all_alive():
                     return
+
+        def get_proxy_num(self):
+            return len(self._proxy_client)
                     
-        
+        def get_worker_num(self):
+            return self._worker_num
         
         def get_proxy(self, proxy_name):
             if not proxy_name in self._proxy_client:
@@ -601,7 +608,14 @@ class Cluster(object):
         self._master_server.update_status()
         
         return self._master_server.check_all_alive()
-    
+  
+    def get_proxy_num(self):
+        return self._master_server.get_proxy_num()    
+
+
+    def get_worker_num(self):
+        return self._master_server.get_worker_num()
+
     def map(self, data_list):
 
         self.LOG.debug('call map: ')    
