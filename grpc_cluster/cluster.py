@@ -483,12 +483,24 @@ class Cluster(object):
     @staticmethod
     def worker(max_workers=10):
         
-        worker_path = os.environ['CLUSTER_WORKER_PATH']
+        
+        worker_root = os.environ['CLUSTER_WORKER_ROOT']
         worker_name = os.environ['CLUSTER_WORKER_NAME']
         worker_port = os.environ['CLUSTER_WORKER_PORT']
         master_name = os.environ['CLUSTER_MASTER_NAME']
         master_addr = os.environ['CLUSTER_MASTER_ADDR']
-        
+        '''
+        if root_directory != None:
+            worker_root = root_directory
+
+        if worker_root == None:
+            worker_root = os.path.abspath('./')
+
+        import sys
+        sys.path.append(os.getcwd())
+        os.chdir(worker_root)
+        '''
+
         _worker = Cluster.Worker(worker_name, worker_port, master_name, master_addr, max_workers)
         
         _worker.welcome_to_master()

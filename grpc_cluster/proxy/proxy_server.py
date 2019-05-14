@@ -529,11 +529,17 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     python_path = os.path.abspath('{}/bin/python'.format(worker_venv))    
                     lib_path = os.path.abspath('{}/lib'.format(worker_venv))
                 
+                def _get_grpc_cluster_path():
+                    import grpc_cluster
+                    fullpath = os.path.abspath(grpc_cluster.__file__)
+                    return os.path.dirname(os.path.dirname(fullpath))
+
                 
                 # launch worker
                 env = os.environ.copy()
+                env['GRPC_CLUSTER_ROOT'] = _get_grpc_cluster_path()
                 env['CLUSTER_ROOT'] = str(os.path.abspath('./'))
-                env['CLUSTER_WORKER_PATH'] = str(os.path.join(env['CLUSTER_ROOT'], worker_name))
+                env['CLUSTER_WORKER_ROOT'] = str(os.path.join(env['CLUSTER_ROOT'], worker_name))
                 env['CLUSTER_WORKER_NAME'] = str(worker_fullname)
                 env['CLUSTER_WORKER_PORT'] = str(worker_port)
                 env['CLUSTER_MASTER_NAME'] = str(master_name)
@@ -655,7 +661,7 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     self.LOG.info('    add param: {}'.format(_param))
             
 
-            rc, o = exeCommand('virtualenv {} {}'.format(param_string, env_path))
+            rc, o = exeCommand('virtualenv {} {}'.format(param_string, os.path.expanduser(env_path)))
             output = output + '\n' + o
             
             self.LOG.info('copying env')
