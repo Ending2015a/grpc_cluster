@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package grpc_cluster.master;
+
+import "grpc_cluster/common/common_type.proto";
+
+service Master {
+
+    rpc sendData(
+            grpc_cluster.common.SendDataRequest)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+            
+    rpc sendMessage(
+            grpc_cluster.common.SendMessageRequest)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+            
+    rpc getWelcomeMessage(
+            grpc_cluster.common.Token)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+}

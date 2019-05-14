@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package grpc_cluster.worker;
+
+import "grpc_cluster/common/common_type.proto";
+import "grpc_cluster/worker/worker_type.proto";
+
+service Worker {
+    
+    
+    rpc sendData(
+            grpc_cluster.common.SendDataRequest)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+            
+    rpc sendMessage(
+            grpc_cluster.common.SendMessageRequest)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+            
+    rpc getMessages(
+            grpc_cluster.worker.GetMessagesRequest)
+        returns (
+            grpc_cluster.worker.GetMessagesResponse) {}
+            
+    rpc shutdown(
+            grpc_cluster.worker.ShutdownRequest)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+            
+    rpc getWelcomeMessage(
+            grpc_cluster.common.Token)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+}

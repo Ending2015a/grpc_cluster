@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package grpc_cluster.proxy;
+
+// import from protobuf
+// import "google/protobuf/empty.proto";
+// import "google/protobuf/any.proto";
+// import "google/protobuf/timestamp.proto";
+
+// 
+import "grpc_cluster/common/common_type.proto";
+
+service Proxy {
+
+    // File
+    rpc uploadFileInfo(
+            grpc_cluster.common.UploadFileInfoRequest) 
+        returns (
+            grpc_cluster.common.UploadFileInfoResponse) {}
+    
+    rpc uploadFile(
+            stream grpc_cluster.common.UploadFileRequest) 
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+    
+    rpc downloadFile(
+            grpc_cluster.common.DownloadFileRequest) 
+        returns (
+            stream grpc_cluster.common.DownloadFileResponse) {}
+    
+    rpc getDirectoryList(
+            grpc_cluster.common.GetDirectoryListRequest) 
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
+    rpc getFileInfo(
+            grpc_cluster.common.GetFileInfoRequest) 
+        returns (
+            grpc_cluster.common.FileInfoResponse) {}
+
+    rpc moveFileOrDirectory(
+            grpc_cluster.common.MoveFileOrDirectoryRequest) 
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
+    rpc removeFileOrDirectory(
+            grpc_cluster.common.RemoveFileOrDirectoryRequest) 
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
+
+    // command line
+    rpc executeCommand(
+            grpc_cluster.common.ExecuteCommandRequest) 
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
+    // User
+    rpc register(
+            grpc_cluster.common.RegisterRequest) 
+        returns (
+            grpc_cluster.common.TokenResponse) {}
+
+    rpc signIn(
+            grpc_cluster.common.SignInRequest) 
+        returns (
+            grpc_cluster.common.TokenResponse) {}
+
+    rpc checkUserExistance(
+            grpc_cluster.common.CheckUserExistanceRequest) 
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
+    // Send Message
+    rpc sendMessage(
+            grpc_cluster.common.SendMessageRequest) 
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
+    rpc getWelcomeMessage(
+            grpc_cluster.common.Token)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
+    // Application
+    rpc launchWorkers(
+            grpc_cluster.common.LaunchWorkerRequest)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
+    rpc createVirtualenv(
+            grpc_cluster.common.CreateVirtualenvRequest)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+            
+}
+

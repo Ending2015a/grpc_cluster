@@ -1,0 +1,31 @@
+master:
+    name: "master00"
+    addr: "localhost:2222"
+
+proxy:
+    - name: "proxy01"
+      addr: "localhost:50051"
+      default_entrypoint: "run.py"
+      default_venv: "atari"
+      workers:
+          - name: "slave01"
+            port: 5550
+            entrypoint: "run.py"
+            environment:
+                - CUDA_VISIBLE_DEVICES = 0
+                
+          - name: "slave02"
+            port: 5551
+            entrypoint: "run.py"
+            environment:
+                - CUDA_VISIBLE_DEVICES = 0
+venv:
+    - name: "atari"
+      params:
+          - python=python3.6
+      requirements:
+          - grpcio
+          - gym
+          - gym_super_mario_bros
+          - --no-binary=protobuf protobuf
+          - dill

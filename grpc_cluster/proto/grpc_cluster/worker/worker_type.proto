@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package grpc_cluster.worker;
+
+import "grpc_cluster/common/common_type.proto";
+
+message GetMessagesRequest {
+    grpc_cluster.common.Token token = 1;
+    repeated string tags = 2;
+}
+
+message GetMessagesResponse {
+    repeated string results = 1;
+    grpc_cluster.common.Status status = 2;
+    grpc_cluster.common.ErrCode error = 3;
+}
+
+message ShutdownRequest {
+    grpc_cluster.common.Token token = 2;
+}

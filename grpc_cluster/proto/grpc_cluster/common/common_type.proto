@@ -1,0 +1,239 @@
+syntax = "proto3";
+
+package grpc_cluster.common;
+import "google/protobuf/timestamp.proto";
+//import "google/protobuf/any.proto";
+
+// enum
+enum Status{
+    UNKNOWN = 0;
+    OK = 1;
+    FAILED = 2;
+}
+
+
+// simple message type
+
+// store sha1 (20 bytes)
+message Key {
+    bytes value = 1;
+}
+
+// store sha256 (32 bytes)
+message Token {
+    bytes value = 1;
+}
+
+// not used
+message AppInfo {
+    string name = 1;
+    string path = 2;
+    string owner = 3;
+    google.protobuf.Timestamp creation_date = 4;
+    google.protobuf.Timestamp last_modified = 5;
+}
+
+// not used
+message UserInfo {
+    string username = 1;
+    string password = 2;
+}
+
+message FileInfo {
+    string name = 1;
+    int64 size = 3;
+}
+
+message FileChunk {
+    Key key = 1;
+    bytes buffer = 2;
+}
+
+message Command {
+    string value = 1;
+    int32 timeout = 2;
+}
+
+message ErrCode {
+    string code = 1;
+    string errmsg = 2;
+}
+
+// ---  responses
+message StatusResponse {
+    string result = 1;
+    Status status = 2;
+    ErrCode error = 3;
+}
+
+// not used
+message FileChunkResponse {
+    FileChunk chunk = 1;
+    Status status = 2;
+    ErrCode error = 3;
+}
+
+message UploadFileInfoResponse {
+    Key key = 1;
+    Status status = 2;
+    ErrCode error = 3;
+}
+
+message DownloadFileResponse {
+    FileChunk chunk = 1;
+    Status status = 2;
+    ErrCode error = 3;
+}
+
+message TokenResponse {
+    Token token = 1;
+    Status status = 2;
+    ErrCode error = 3;
+}
+
+message FileInfoResponse {
+    string name = 1;
+    int64 size = 2;
+    Status status = 3;
+    ErrCode error = 4;
+}
+
+// --- request
+
+//  rpc uploadFileInfo
+message UploadFileInfoRequest {
+    Token token = 1;
+    FileInfo info = 2;
+}
+
+//  rpc uploadFile
+// <no need to pass token!>
+message UploadFileRequest {
+    FileChunk chunk = 1;
+}
+
+//  rpc downloadFile
+message DownloadFileRequest {
+    Token token = 1;
+    FileInfo info = 2;
+}
+
+//  rpc getDirectoryList
+message GetDirectoryListRequest {
+    Token token = 1;
+    string path = 2;
+    bool TREE = 3;
+    bool FLAT = 4;
+}
+
+// rpc getFileInfo
+message GetFileInfoRequest {
+    Token token = 1;
+    FileInfo info = 2;
+}
+
+//  rpc moveFileOrDirectoryRequest
+message MoveFileOrDirectoryRequest {
+    Token token = 1;
+    string old_name = 2;
+    string new_name = 3;
+}
+
+//  rpc removeFileOrDirectory
+message RemoveFileOrDirectoryRequest {
+    Token token = 1;
+    string name = 2;
+}
+
+//  rpc executeCommand
+message ExecuteCommandRequest {
+    Token token = 1;
+    Command command = 2;
+}
+
+//  rpc register
+message RegisterRequest {
+    Token token = 1;
+    string username = 2;
+    string password = 3;
+}
+
+//  rpc sign in
+message SignInRequest {
+    string username = 1;
+    string password = 2;
+}
+
+//  rpc checkUserExistance
+message CheckUserExistanceRequest {
+    string username = 1;
+}
+
+// rpc sendMessage
+message SendMessageRequest {
+    Token token = 1;
+    string tag = 2;
+    string msg = 3;
+}
+
+message SendDataRequest {
+    Token token = 1;
+    string tag = 2;
+    bytes data = 3;
+}
+
+// ---
+
+message ClusterConfiguration {
+
+    message Master {
+        string name = 1;
+        string addr = 2;
+    }
+
+    message Proxy {
+
+        message Worker {
+
+            message Environment {
+                string variable = 1;
+                string value = 2;
+            }
+
+            string name = 1;
+            int32 port = 2;
+            string entrypoint = 3;
+            string venv = 4;
+            repeated Environment environment = 5;
+        }
+
+
+        string name = 1;
+        string default_entrypoint = 2;
+        string default_venv = 3;
+        repeated Worker workers = 4;
+    }
+
+
+    Master master = 1;
+    Proxy proxy = 2;
+}
+
+message VirtualenvConfiguration {
+    string path = 1;
+    repeated string params = 2;
+    repeated string requirements = 3;
+}
+
+
+message LaunchWorkerRequest {
+    Token token = 1;
+    ClusterConfiguration configuration = 2;
+}
+
+
+message CreateVirtualenvRequest {
+    Token token = 1;
+    VirtualenvConfiguration configuration = 2;
+}
+
