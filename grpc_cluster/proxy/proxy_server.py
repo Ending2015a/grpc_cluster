@@ -501,6 +501,8 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
             
             default_entrypoint = proxy_config.default_entrypoint
             default_venv = proxy_config.default_venv
+            if default_venv != '':
+                default_venv = os.path.expanduser(default_venv)
             
             worker_configs = proxy_config.workers
             
@@ -535,6 +537,7 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     python_path = 'python3'
                     lib_path = ''
                 else:
+                    worker_venv = os.path.expanduser(worker_venv)
                     python_path = os.path.abspath('{}/bin/python'.format(worker_venv))    
                     lib_path = os.path.abspath('{}/lib'.format(worker_venv))
                 
@@ -566,7 +569,7 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                 
                     current_time = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
                     output_file_name = '{}_{}_{}'.format(worker_name, worker_port, current_time)
-                                
+                    
                     stdout_name = '{}.out'.format(output_file_name)
                     stderr_name = '{}.err'.format(output_file_name)
                 
