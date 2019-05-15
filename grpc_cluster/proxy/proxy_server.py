@@ -504,9 +504,10 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
             
             worker_configs = proxy_config.workers
             
+
             if len(worker_configs) == 0:
                 raise Exception('no worker definition found')
-            
+ 
             for worker in worker_configs:
                 worker_name = worker.name
                 worker_fullname = '{}/{}'.format(proxy_name, worker.name)
@@ -514,8 +515,16 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                 worker_entrypoint = default_entrypoint if worker.entrypoint == '' else worker.entrypoint
                 worker_venv = default_venv if worker.venv == '' else worker.venv
                 worker_envs = {}
-                for env in worker.environment:
-                    worker_envs[env.variable] = env.value
+
+                if worker_name == '':
+                    raise Exception('no name specified for worker')
+
+                if worker_port == '':
+                    raise Exception('no port number specified for worker={}'.format(name))                
+
+                if len(worker.environment) > 0:
+                    for env in worker.environment:
+                        worker_envs[env.variable] = env.value
                 
                 if worker_entrypoint == '':
                     raise Exception('no entrypoint specified for worker={}, port={}'.format(worker_fullname, worker_port))
@@ -534,63 +543,79 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     fullpath = os.path.abspath(grpc_cluster.__file__)
                     return os.path.dirname(os.path.dirname(fullpath))
 
+
+                def _launch_single_worker(worker_name, worker_fullname, worker_port):
+                    # launch worker
+                    env = os.environ.copy()
+                    env['GRPC_CLUSTER_ROOT'] = _get_grpc_cluster_path()
+                    env['CLUSTER_ROOT'] = str(os.path.abspath('./'))
+                    env['CLUSTER_WORKER_ROOT'] = str(os.path.join(env['CLUSTER_ROOT'], worker_name))
+                    env['CLUSTER_WORKER_NAME'] = str(worker_fullname)
+                    env['CLUSTER_WORKER_PORT'] = str(worker_port)
+                    env['CLUSTER_MASTER_NAME'] = str(master_name)
+                    env['CLUSTER_MASTER_ADDR'] = str(master_addr)
+                    # add venv library path, cluster root path
+                    env['PATH'] = '{}:{}:'.format(lib_path, env['CLUSTER_ROOT']) + env['PATH']
                 
-                # launch worker
-                env = os.environ.copy()
-                env['GRPC_CLUSTER_ROOT'] = _get_grpc_cluster_path()
-                env['CLUSTER_ROOT'] = str(os.path.abspath('./'))
-                env['CLUSTER_WORKER_ROOT'] = str(os.path.join(env['CLUSTER_ROOT'], worker_name))
-                env['CLUSTER_WORKER_NAME'] = str(worker_fullname)
-                env['CLUSTER_WORKER_PORT'] = str(worker_port)
-                env['CLUSTER_MASTER_NAME'] = str(master_name)
-                env['CLUSTER_MASTER_ADDR'] = str(master_addr)
-                # add venv library path, cluster root path
-                env['PATH'] = '{}:{}:'.format(lib_path, env['CLUSTER_ROOT']) + env['PATH']
-                
-                for e in worker_envs:
-                    env[e] = str(worker_envs[e])
+                    for e in worker_envs:
+                        env[e] = str(worker_envs[e])
                     
-                command = '{} \"{}\"'.format(python_path, worker_entrypoint)
+                    command = '{} \"{}\"'.format(python_path, worker_entrypoint)
                 
-                cmds = shlex.split(command)
+                    cmds = shlex.split(command)
                 
-                current_time = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-                output_file_name = '{}_{}_{}'.format(worker_name, worker_port, current_time)
+                    current_time = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                    output_file_name = '{}_{}_{}'.format(worker_name, worker_port, current_time)
                                 
-                stdout_name = '{}.out'.format(output_file_name)
-                stderr_name = '{}.err'.format(output_file_name)
+                    stdout_name = '{}.out'.format(output_file_name)
+                    stderr_name = '{}.err'.format(output_file_name)
                 
                 
-                self.LOG.debug('    start worker:')
-                self.LOG.debug('        name: {}'.format(worker_name))
-                self.LOG.debug('    fullname: {}'.format(worker_fullname))
-                self.LOG.debug('        port: {}'.format(worker_port))
-                self.LOG.debug('  entrypoint: {}'.format(worker_entrypoint))
-                self.LOG.debug('        venv: {}'.format(worker_venv))
-                self.LOG.debug('        envs: {}'.format(worker_envs))
-                self.LOG.debug('      stdout: {}'.format(stdout_name))
-                self.LOG.debug('      stderr: {}'.format(stdout_name))
-                self.LOG.debug('       owner: {}'.format(username))
+                    self.LOG.debug('    start worker:')
+                    self.LOG.debug('        name: {}'.format(worker_name))
+                    self.LOG.debug('    fullname: {}'.format(worker_fullname))
+                    self.LOG.debug('        port: {}'.format(worker_port))
+                    self.LOG.debug('  entrypoint: {}'.format(worker_entrypoint))
+                    self.LOG.debug('        venv: {}'.format(worker_venv))
+                    self.LOG.debug('        envs: {}'.format(worker_envs))
+                    self.LOG.debug('      stdout: {}'.format(stdout_name))
+                    self.LOG.debug('      stderr: {}'.format(stdout_name))
+                    self.LOG.debug('       owner: {}'.format(username))
                 
                 
-                # start worker
-                worker_stdout = open(stdout_name, "wb")
-                #worker_stderr = open(stderr_name, "wb")
-                process = subprocess.Popen(cmds, env=env, stdout=worker_stdout, stderr=worker_stdout)
+                    # start worker
+                    worker_stdout = open(stdout_name, "wb")
+                    # worker_stderr = open(stderr_name, "wb")
+                    process = subprocess.Popen(cmds, env=env, stdout=worker_stdout, stderr=worker_stdout)
                 
-                self._worker_map[worker_name] = {
-                    'name': worker_name,
-                    'fullname': worker_fullname,
-                    'port': worker_port,
-                    'entrypoint': worker_entrypoint,
-                    'venv': worker_venv,
-                    'envs': worker_envs,
-                    'process': process,
-                    'stdout': worker_stdout,
-                    #'stderr': worker_stderr,
-                    'owner': username,
-                    }
-                    
+                    self._worker_map[worker_name] = {
+                        'name': worker_name,
+                        'fullname': worker_fullname,
+                        'port': worker_port,
+                        'entrypoint': worker_entrypoint,
+                        'venv': worker_venv,
+                        'envs': worker_envs,
+                        'process': process,
+                        'stdout': worker_stdout,
+                        #'stderr': worker_stderr,
+                        'owner': username,
+                        }
+            
+                if '-' in worker_port:
+                    start_port, end_port = worker_port.split('-')
+                    start_port = int(start_port.strip())
+                    end_port = int(end_port.strip())
+                    launch_port = [x for x in range(start_port, end_port+1)]
+
+                    for port in launch_port:
+                        _worker_name = '{}_{}'.format(worker_name, port)
+                        _worker_fullname = '{}_{}'.format(worker_fullname, port)
+                        _worker_port = port
+                        _launch_single_worker(_worker_name, _worker_fullname, _worker_port)
+
+                else:
+                    _launch_single_worker(worker_name, worker_fullname, worker_port)
+
             
             status = self._getStatusObject('OK')
             response = common_type.StatusResponse(status=status)

@@ -21,7 +21,8 @@ class DefaultMasterServicer(pb2_grpc.MasterServicer):
         
         self.sendDataCallback = None
         self.sendMessageCallback = None
-        self.welcome_message = 'Hello client'
+        self.getWelcomeMessageCallback = None
+        self.welcome_message = 'Hello I\'m master!!'
         
         loadConfig()
         self.LOG = createLoggerFromExistedLogger(logger_name, logger_level)  
@@ -46,11 +47,16 @@ class DefaultMasterServicer(pb2_grpc.MasterServicer):
         errcode = Ewrapper.exceptionToErrCode(e, code, errmsg)
         return status, errcode
     
+    def setGetWelcomeMessageCallback(self, callback):
+        self.LOG.debug('setGetWelcomeMessageCallback')
+        self.getWelcomeMessageCallback = callback
     
     def setSendDataCallback(self, callback):
+        self.LOG.debug('setSendDataCallback')
         self.sendDataCallback = callback
     
     def setSendMessageCallback(self, callback):
+        self.LOG.debug('setSendMessageCallback')
         self.sendMessageCallback = callback
                 
     def sendData(self, request, context):
@@ -122,6 +128,8 @@ class DefaultMasterServicer(pb2_grpc.MasterServicer):
         self.LOG.debug('receive getWelComeMessage request')
 
         try:
+            if self.getWelcomeMessageCallback != None:
+                self.getWelcomeMessageCallback(request, context)
             
             status = self._getStatusObject('OK')
 

@@ -3,4 +3,4 @@ from grpc_cluster.proxy import DefaultProxyServer
 
 server = DefaultProxyServer()
 
-server.start(50051)
+server.start(50040)

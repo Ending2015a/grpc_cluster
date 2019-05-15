@@ -25,10 +25,10 @@ from grpc_cluster.logger import *
 def hash_name(name):
     return hashlib.sha256(name.encode('utf-8')).digest()
 
-
+'''
 class CustomMasterServicer(DefaultMasterServicer):
     def __init__(self):
-        DefaultMasterServicer.__init__(self)
+        DefaultMasterServicer.__init__(self, logger_name='CustomMasterServicer', logger_level='DEBUG')
         self.welcome_queue = collections.deque()
         
         self.receive_welcome_event = threading.Event()
@@ -55,7 +55,7 @@ class CustomMasterServicer(DefaultMasterServicer):
             response = common_type.StatusResponse(status=status, error=errcode)
 
         return response
-
+'''
 
 class Cluster(object):
 
@@ -66,8 +66,7 @@ class Cluster(object):
                             logger_level='DEBUG'):
             self.name = name
             self.port = port
-            self.server = DefaultMasterServer(max_workers=max_workers, 
-                                              servicer=CustomMasterServicer)
+            self.server = DefaultMasterServer(max_workers=max_workers)
             
             self.token = hash_name(self.name)
             
@@ -85,9 +84,17 @@ class Cluster(object):
                 self._result_queue.append(d)
                 self._receive_data_event.set()
                 
+            def receive_welcome_message_callback(request, context):
+                 token = request.value
+                 
+                 self.LOG.debug('    receive welcome message, token: {}'.format(token))
+                                  
+                 self._welcome_message_queue.append(token)
+                 self._receive_welcome_message_event.set()
+
             
             self.server.servicer.setSendDataCallback(receive_data_callback)
-                
+            self.server.servicer.setGetWelcomeMessageCallback(receive_welcome_message_callback)
             
             self.server.start(port)
             
@@ -98,6 +105,12 @@ class Cluster(object):
             self._mapping_task = {}
             self._receive_data_event = threading.Event()
             self._result_queue = collections.deque()
+            self._welcome_message_queue = collections.deque()
+            self._receive_welcome_message_event = threading.Event()
+
+            self._receive_data_event.clear()
+            self._receive_welcome_message_event.clear()
+
             self._worker_num = 0
             
             loadConfig()
@@ -137,7 +150,7 @@ class Cluster(object):
             worker = WorkerClientWrapper()
             worker.name = name
             worker.fullname = proxy_name + '/' + name
-            worker.addr = proxy_ip + ':' + str(port)
+            worker.addr = proxy_ip + ':' + port
             
             
             worker.token = hash_name(worker.fullname)
@@ -188,19 +201,22 @@ class Cluster(object):
             self._receive_data_event.wait()
         
         def _reset_receive_welcome_event(self):
-            self.server.servicer.receive_welcome_event.clear()
+            self._receive_welcome_message_event.clear()
         
         def _wait_for_receiving_welcome_event(self):
-        
-            self.server.servicer.receive_welcome_event.wait()
+            self._receive_welcome_message_event.wait()
         
         def _wait_for_receiving_welcome_messages_from_all_workers(self):
             
             while True:
-                self._wait_for_receiving_welcome_event()
-                
-                while len(self.server.servicer.welcome_queue) > 0:
-                    token = self.server.servicer.welcome_queue.popleft()
+
+                if len(self._welcome_message_queue) == 0:
+                    self._wait_for_receiving_welcome_event()
+                    self._reset_receive_welcome_event() 
+                    pass
+
+                while len(self._welcome_message_queue) > 0:
+                    token = self._welcome_message_queue.popleft()
                     
                     if not token in self._worker_tokens:
                         self.LOG.warning('receive unknown token: {}'.format(token))
@@ -212,7 +228,6 @@ class Cluster(object):
                         self._worker_client[proxy_name][worker_name].alive = True
                         self.LOG.debug('receive token from worker: {}'.format(worker_fullname))
                 
-                self._reset_receive_welcome_event()
                 
                 if self.check_all_alive():
                     return
@@ -354,14 +369,23 @@ class Cluster(object):
         
         def close(self):
             
-            self.LOG.debug('call close: ')
-            for proxy_name in self._worker_client:
-                for worker_name in self._worker_client[proxy_name]:
-                    worker = self._worker_client[proxy_name][worker_name]
+            try:
+                self.LOG.debug('call close: ')
+                for proxy_name in self._worker_client:
+                    for worker_name in self._worker_client[proxy_name]:
+                        worker = self._worker_client[proxy_name][worker_name]
                     
-                    
-                    self.LOG.debug('    send shotdown signal to worker: {}'.format(worker.fullname))
-                    worker.client.shutdown()
+                        try:
+                            self.LOG.debug('    send shotdown signal to worker: {}'.format(worker.fullname))
+                            worker.client.shutdown()
+                            worker.alive=False
+                        except:
+                            pass
+            except:
+                pass
+
+        def __del__(self):
+            self.close()
         
         
     class Worker(object):
@@ -384,6 +408,11 @@ class Cluster(object):
             
             self.master = DefaultMasterClient(master_addr)
             
+            self.LOG.debug('worker name: {}'.format(self.name))
+            self.LOG.debug('worker port: {}'.format(self.port))
+            self.LOG.debug('master name: {}'.format(master_name))
+            self.LOG.debug('master addr: {}'.format(master_addr))
+
             self.task_queue = collections.deque()
             self.receive_task_event = threading.Event()
             
@@ -402,11 +431,12 @@ class Cluster(object):
                 
             self.server.servicer.setSendDataCallback(receive_data_callback)
         
-        def welcome_to_master(self):
-            self.LOG.debug('call welcome_to_master:')
+        def master_welcome(self):
+            self.LOG.debug('call master_welcome:')
             
-            if self.master.welcome(self.token) != None:
-                self.LOG.debug('    receive welcome info from master')
+            res = self.master.welcome(self.token)
+            if res != None:
+                self.LOG.debug('    receive welcome info from master: {}'.format(res))
         
         def wait_for_task(self):
             self.LOG.debug('call wait_for_task:')
@@ -503,7 +533,7 @@ class Cluster(object):
 
         _worker = Cluster.Worker(worker_name, worker_port, master_name, master_addr, max_workers)
         
-        _worker.welcome_to_master()
+        _worker.master_welcome()
         
         return _worker
         
@@ -562,16 +592,36 @@ class Cluster(object):
                     worker_port = worker_config.get('port')
                     assert worker_name != None
                     assert worker_port != None
+
+                    worker_name = str(worker_name)
+                    worker_port = str(worker_port)
+
+                    def _launch_single_worker_client(worker_name, worker_port):
                     
-                    self.LOG.debug('    worker name: {}'.format(worker_name))
-                    self.LOG.debug('    worker port: {}'.format(worker_port))
+                        self.LOG.debug('    worker name: {}'.format(worker_name))
+                        self.LOG.debug('    worker port: {}'.format(worker_port))
                     
-                    assert worker_config.get('entrypoint') != None or proxy_config.get('default_entrypoint') != None
-                    assert worker_config.get('venv') != None or proxy_config.get('default_venv') != None
+                        assert worker_config.get('entrypoint') != None or proxy_config.get('default_entrypoint') != None
+                        assert worker_config.get('venv') != None or proxy_config.get('default_venv') != None
                     
-                    # create worker client
-                    self._master_server._add_worker_client(proxy_name, proxy_ip, worker_name, worker_port)
+                        # create worker client
+                        self._master_server._add_worker_client(proxy_name, proxy_ip, worker_name, worker_port)
                     
+                    if '-' in worker_port:
+                        start_port, end_port = worker_port.split('-')
+                        start_port = int(start_port.strip())
+                        end_port = int(end_port.strip())
+                        
+                        for port in range(start_port, end_port+1):
+                            _worker_name = '{}_{}'.format(worker_name, port)
+                            _worker_port = str(port)
+
+                            _launch_single_worker_client(_worker_name, _worker_port)
+
+                    else:
+                        _launch_single_worker_client(worker_name, worker_port)
+                        
+
     
     def _create_venvs(self):
     
@@ -610,7 +660,8 @@ class Cluster(object):
             self.LOG.debug('    proxy conf: {}'.format(configure))
             
             self._master_server._launch_workers(name, configure)
-            
+           
+        self.LOG.debug('    waiting for receiving welcome messages from all workers') 
         self._master_server._wait_for_receiving_welcome_messages_from_all_workers()
         
     def _check_all_alive(self):

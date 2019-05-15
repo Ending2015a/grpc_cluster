@@ -1,0 +1,66 @@
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: Found include path: /usr/local/include
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: /usr/local/include
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/common
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/proxy
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/master
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/worker
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: generating code to path: 
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster/proxy
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: creating directories:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: compiling proto file:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     proxy/proxy.proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: /usr/local/include
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/common
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/proxy
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/master
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/worker
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: generating code to path: 
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster/master
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: creating directories:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: compiling proto file:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     master/master.proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: /usr/local/include
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/common
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/proxy
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/master
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/worker
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: generating code to path: 
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster/worker
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: creating directories:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: compiling proto file:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     worker/worker.proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: /usr/local/include
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/common
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/proxy
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/master
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/worker
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: generating code to path: 
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster/worker
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: creating directories:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: compiling proto file:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     worker/worker_type.proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: /usr/local/include
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/common
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/proxy
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/master
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster/worker
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     add include path: ./proto
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: generating code to path: 
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster/common
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: creating directories:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     /home/grimoire/grpc_env/grpc_cluster/grpc_cluster
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]: compiling proto file:
+[2019-05-15 15:14:36|MainThread|INFO:run_codegen]:     common/common_type.proto

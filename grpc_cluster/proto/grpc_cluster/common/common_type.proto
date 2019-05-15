@@ -201,7 +201,7 @@ message ClusterConfiguration {
             }
 
             string name = 1;
-            int32 port = 2;
+            string port = 2;
             string entrypoint = 3;
             string venv = 4;
             repeated Environment environment = 5;

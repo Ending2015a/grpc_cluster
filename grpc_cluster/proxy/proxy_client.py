@@ -167,21 +167,52 @@ class LowEndProxyClient:
             worker_venv = config_worker.get('venv')
 
             envs = []
-            for config_worker_env in config_worker.get('environment'):
-                # create environment variable list
-                variable, value = [x.strip() for x in config_worker_env.split('=')]
-                env = common_type.ClusterConfiguration.Proxy.Worker.Environment(variable=variable, value=value)
+            
+            worker_env = config_worker.get('environment')
+
+            if worker_env != None:
+            	for config_worker_env in config_worker.get('environment'):
+                    # create environment variable list
+                    variable, value = [x.strip() for x in config_worker_env.split('=')]
+                    env = common_type.ClusterConfiguration.Proxy.Worker.Environment(variable=variable, value=value)
                 
-                envs.append(env) # repeated Environment
+                    envs.append(env) # repeated Environment
 
-            worker = common_type.ClusterConfiguration.Proxy.Worker(
-                        name=worker_name,
-                        port=worker_port,
-                        entrypoint=worker_entrypoint,
-                        venv=worker_venv,
-                        environment=envs)
+            def create_worker_config(name, port,
+                          entrypoint, venv, environment):
 
-            workers.append(worker)
+                worker = common_type.ClusterConfiguration.Proxy.Worker(
+                    name=name,
+                    port=port,
+                    entrypoint=entrypoint,
+                    venv=venv,
+                    environment=environment)
+
+                return worker
+                
+
+
+            if '-' in worker_port:
+                start_port, end_port = worker_port.split('-')
+
+                start_port = int(start_port.strip())
+                end_port = int(end_port.strip())
+
+                for port in range(start_port, end_port+1):
+                    _worker_name = '{}_{}'.format(worker_name, port)
+                    _worker_port = str(port)
+ 
+                    worker = create_worker_config(_worker_name, _worker_port,
+                             worker_entrypoint, worker_venv, envs)
+
+                    workers.append(worker)
+
+            else:
+                worker = create_worker_config(worker_name, worker_port,
+                             worker_entrypoint, worker_venv, envs)
+
+                workers.append(worker)
+       
 
         proxy = common_type.ClusterConfiguration.Proxy(
                     name=proxy_name,
