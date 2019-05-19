@@ -115,7 +115,7 @@ class Cluster(object):
             
             
             self.__worker_result_pair = {}
-            
+            self.__still_working_list = []
             loadConfig()
             self.LOG = createLoggerFromExistedLogger(logger_name, logger_level)
     
@@ -317,6 +317,7 @@ class Cluster(object):
                         worker.client.sendData(pickle_data, tag)
                         
                         self._mapping_task[worker.fullname] = index
+                        self.__still_working_list.append(worker.fullname)
                     except StopIteration:
                         break
 
@@ -344,6 +345,9 @@ class Cluster(object):
                         self.LOG.debug('    receive result from worker: {}'.format(worker_name))
                         
                         self.__worker_result_pair[worker_name] = data
+                        
+                        if worker_name in self.__still_working_list:
+                            self.__still_working_list.remove(worker_name)
                 
                 # done
                 if len(self.__worker_result_pair) == mapping_task_num:
@@ -364,10 +368,11 @@ class Cluster(object):
                     return True, result_list
                 
                 # not done
-                if not block:
-                    return False, None
 
                 if len(self._result_queue) == 0:
+                    self.LOG.info('workers: {} are still working'.format(self.__still_working_list))
+                    if not block:
+                        return False, None
                     self._wait_for_receiving_data_event()
                     self._reset_receive_data_event()
                 
@@ -400,10 +405,11 @@ class Cluster(object):
                             master_name, master_addr, 
                             max_workers=10,
                             logger_name='Cluster-Worker',
-                            logger_level='DEBUG'):
+                            logger_level='DEBUG',
+                            log_to_file=False):
                             
             loadConfig()
-            self.LOG = createLoggerFromExistedLogger(logger_name, logger_level)
+            self.LOG = createLoggerFromExistedLogger(logger_name, logger_level, log_to_file=log_to_file)
             self.name = name
             self.port = port
             

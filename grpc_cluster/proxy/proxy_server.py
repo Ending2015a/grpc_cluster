@@ -568,15 +568,18 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     cmds = shlex.split(command)
                 
                     current_time = getLogTimeString()
-                    output_file_name = '{}_log/{}_{}_{}'.format(proxy_name, worker_name, worker_port, current_time)
+                    output_dirname = '{}_worker_log'.format(proxy_name)
+                    output_filename = '{}_{}_{}'.format(worker_name, 
+                                                        worker_port, current_time)
+                    output_path = os.path.join(output_dirname, output_filename)
 
                     try:
-                        os.makedirs('./{}_log'.format(proxy_name))
+                        os.makedirs(output_dirname)
                     except OSError:
                         pass
                         
-                    stdout_name = '{}.stdout'.format(output_file_name)
-                    stderr_name = '{}.stderr'.format(output_file_name)
+                    stdout_name = '{}.stdout'.format(output_path)
+                    stderr_name = '{}.stderr'.format(output_path)
                 
                 
                     self.LOG.debug('    start worker:')

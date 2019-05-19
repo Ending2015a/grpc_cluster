@@ -1,5 +1,5 @@
 import random
-
+import time
 from grpc_cluster import Cluster
 
 config_path = 'cluster_config.yml'
@@ -19,14 +19,20 @@ def generate_samples(num, sample):
 
 
 for i in range(5):
-    actions = generate_samples(2, 5)
+    actions = generate_samples(cluster.get_worker_num(), 5)
     print('generate actions: {}'.format(actions))
 
     print('map actions to workers')
     assert cluster.map(actions)
 
     print('wait for results')
-    results = cluster.reduce() #return list
+    
+    done = False
+    while not done:
+        print('workers are still working...')
+        time.sleep(1)
+        done, results = cluster.reduce(block=False)
+        
     print(results)
 
 cluster.close()

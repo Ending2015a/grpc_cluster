@@ -9,7 +9,7 @@ proxy:
       default_venv: "atari"
       workers:
           - name: "slave"
-            port: 6660-6661
+            port: 6660-6662
 venv:
     - name: "atari"
       params:
