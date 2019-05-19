@@ -13,20 +13,30 @@ def makedir(path):
     try:
         os.makedirs(path)
     except OSError:
-        pass
+        if e.errno != errno.EEXIST:
+            raise
+
+
+def getLogTimeString(time_format='%Y%m%d_%H%M%S'):
+    return datetime.datetime.now().strftime(time_format)
 
 def loadConfig(filename=filename):
-    makedir(os.path.abspath(logfile_prefix))
-    filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-    logtime = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    logging.config.fileConfig(filepath, defaults={
+    if "loaded" not in loadConfig.__dict__:
+        loadConfig.loaded = False
+    if not loadConfig.loaded:
+        makedir(os.path.abspath(logfile_prefix))
+        filepath = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        logtime = getLogTimeString()
+        logging.config.fileConfig(filepath, defaults={
                                         'prefix': logfile_prefix,
-                                        'logtime': logtime,
+                                        'logtime': getLogTimeString(),
                                         'suffix': logfile_suffix}, 
                                     disable_existing_loggers=False)
+        loadConfig.loaded = True
 
 def checkLoggerExist(logger_name):
     return logger_name in logging.Logger.manager.loggerDict
+
 
 def createLoggerFromExistedLogger(logger_name, existed_logger_name=None):
     if (not existed_logger_name == None ) and not checkLoggerExist(existed_logger_name):
@@ -40,6 +50,7 @@ def createLoggerFromExistedLogger(logger_name, existed_logger_name=None):
     LOG = logging.getLogger(logger_name)
 
     LOG.setLevel(EX.getEffectiveLevel())
+    LOG.propagate = True
     #for handler in EX.handlers:
     #    LOG.addHandler(handler)
 

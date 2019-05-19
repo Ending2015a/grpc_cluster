@@ -113,6 +113,9 @@ class Cluster(object):
 
             self._worker_num = 0
             
+            
+            self.__worker_result_pair = {}
+            
             loadConfig()
             self.LOG = createLoggerFromExistedLogger(logger_name, logger_level)
     
@@ -319,12 +322,11 @@ class Cluster(object):
 
             return True
         
-        def reduce(self):
+        def reduce(self, block=True):
         
             
             mapping_task_num = len(self._mapping_task)
-            worker_result_pair = {}
-            self.LOG.debug('call reduce: {}'.format(mapping_task_num))
+            self.LOG.debug('call reduce: {} tasks / block = {}'.format(mapping_task_num, block))
             
             while True:
             
@@ -341,31 +343,36 @@ class Cluster(object):
                         
                         self.LOG.debug('    receive result from worker: {}'.format(worker_name))
                         
-                        worker_result_pair[worker_name] = data
+                        self.__worker_result_pair[worker_name] = data
                 
-                if len(worker_result_pair) == mapping_task_num:
-                    break
-                        
+                # done
+                if len(self.__worker_result_pair) == mapping_task_num:
+                    self.LOG.debug('    ALL DATA RECEIVED')
+                    result_list = [None for _ in range(mapping_task_num)]
+
+                    for worker_name in self.__worker_result_pair:
+                        index = self._mapping_task[worker_name]
+                        data = self.__worker_result_pair[worker_name]
+                
+                        result_list[index] = data
+            
+                    self.LOG.debug('        {}'.format(result_list))
+            
+                    self._mapping_task = {}
+                    self.__worker_result_pair = {}
+            
+                    return True, result_list
+                
+                # not done
+                if not block:
+                    return False, None
+
                 if len(self._result_queue) == 0:
                     self._wait_for_receiving_data_event()
                     self._reset_receive_data_event()
                 
-            self.LOG.debug('    ALL DATA RECEIVED')
             
-            
-            result_list = [None for _ in range(mapping_task_num)]
-            
-            for worker_name in worker_result_pair:
-                index = self._mapping_task[worker_name]
-                data = worker_result_pair[worker_name]
-                
-                result_list[index] = data
-            
-            self.LOG.debug('        {}'.format(result_list))
-            
-            self._mapping_task = {}
-            
-            return result_list
+            return False, None
         
         def close(self):
             
@@ -685,12 +692,15 @@ class Cluster(object):
     
         return self._master_server.map(data_list)
     
-    def reduce(self):
+    def reduce(self, block=True):
     
         self.LOG.debug('call reduce: ')
     
-        result_list = self._master_server.reduce()
-        return result_list
+        done, result_list = self._master_server.reduce(block=block)
+        if block:
+            return result_list
+        else:
+            return done, result_list
     
     def close(self):
         try:
