@@ -24,7 +24,9 @@ from grpc_cluster.proxy import proxy_pb2 as pb2
 import logging
 from grpc_cluster.logger import *
 
+# other servicers
 from grpc_cluster.common.auth import AuthenticationServicer
+from grpc_cluster.common.local import LocalServicer
 
 CHUNK_SIZE= 1024 * 1024  # 1024 * 1024 bytes = 1MB
 UPLOAD_KEY_LENGTH = 8    # bytes
@@ -36,9 +38,7 @@ RESET_USER_DATA=False
 DEFAULT_TOKEN_PATH='token.json'
 DEFAULT_USER_PATH='user.json'
 
-
-
-class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
+class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer, LocalServiser):
 
 
     def __init__(self, token_file_path=DEFAULT_TOKEN_PATH,
@@ -71,6 +71,7 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                                         logger_level=logger_level)
 
         self._worker_map = {}
+        self._owner_map = {}
         self._upload_key_map = {} # store upload file keys
         self._initializeLogger(logger_name, logger_level)
 
@@ -78,6 +79,9 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
         if self.add_admin_user:
             if not self.validateUser(self.admin_username):
                 self.registerNewUser(self.admin_username, self.admin_password)
+                
+        LocalServicer.__init__(self=self,
+                               logger = self.LOG)
 
     def _initializeLogger(self, logger_name, logger_level):
         # 
@@ -328,19 +332,17 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
             self.LOG.warning('execute command: {}'.format(command))
 
             # parsing command
-            cmd_list = shlex.split(command)
+            #cmd_list = shlex.split(command)
 
-            self.LOG.debug('parse command: {}'.format(cmd_list))
+            #self.LOG.debug('parse command: {}'.format(cmd_list))
 
             # execute command
-            raw_output = subprocess.check_output(cmd_list, timeout=timeout)
-            output = raw_output.decode('utf-8')
+            #raw_output = subprocess.check_output(cmd_list, timeout=timeout)
+            #output = raw_output.decode('utf-8')
             
-            self.LOG.debug('get command output: {}'.format(output))
+            rc, output, _ = self.exeCommand(command, timeout=timeout, wait=True, print_output=True)
 
             status = self._getStatusObject('OK')
-            
-            self.LOG.debug('get command output: {}'.format(output))
 
             response = common_type.StatusResponse(result=output, status=status)
 
@@ -476,7 +478,7 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
             response = common_type.StatusResponse(status=status, error=errcode)
 
         return response
-        
+    
     def launchWorkers(self, request, context):
         # Input: common_type.LaunchWorkerRequest
         # Output: common_type.StatusResponse
@@ -511,8 +513,8 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                 raise Exception('no worker definition found')
  
             for worker in worker_configs:
+            
                 worker_name = worker.name
-                worker_fullname = '{}/{}'.format(proxy_name, worker.name)
                 worker_port = worker.port
                 worker_entrypoint = default_entrypoint if worker.entrypoint == '' else worker.entrypoint
                 worker_venv = default_venv if worker.venv == '' else worker.venv
@@ -522,14 +524,14 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     raise Exception('no name specified for worker')
 
                 if worker_port == '':
-                    raise Exception('no port number specified for worker={}'.format(name))                
+                    raise Exception('no port number specified for worker={}'.format(worker_name))                
 
                 if len(worker.environment) > 0:
                     for env in worker.environment:
                         worker_envs[env.variable] = env.value
                 
                 if worker_entrypoint == '':
-                    raise Exception('no entrypoint specified for worker={}, port={}'.format(worker_fullname, worker_port))
+                    raise Exception('no entrypoint specified for worker={}, port={}'.format(worker_name, worker_port))
                 
                 worker_entrypoint = os.path.abspath(worker_entrypoint)
                 
@@ -547,13 +549,13 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     return os.path.dirname(os.path.dirname(fullpath))
 
 
-                def _launch_single_worker(worker_name, worker_fullname, worker_port):
+                def _launch_single_worker(worker_name, worker_uniquename, worker_port):
                     # launch worker
                     env = os.environ.copy()
                     env['GRPC_CLUSTER_ROOT'] = _get_grpc_cluster_path()
                     env['CLUSTER_ROOT'] = str(os.path.abspath('./'))
                     env['CLUSTER_WORKER_ROOT'] = str(os.path.join(env['CLUSTER_ROOT'], worker_name))
-                    env['CLUSTER_WORKER_NAME'] = str(worker_fullname)
+                    env['CLUSTER_WORKER_NAME'] = str(worker_uniquename)
                     env['CLUSTER_WORKER_PORT'] = str(worker_port)
                     env['CLUSTER_MASTER_NAME'] = str(master_name)
                     env['CLUSTER_MASTER_ADDR'] = str(master_addr)
@@ -562,10 +564,6 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                 
                     for e in worker_envs:
                         env[e] = str(worker_envs[e])
-                    
-                    command = '{} \"{}\"'.format(python_path, worker_entrypoint)
-                
-                    cmds = shlex.split(command)
                 
                     current_time = getLogTimeString()
                     output_dirname = '{}_worker_log'.format(proxy_name)
@@ -584,7 +582,7 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                 
                     self.LOG.debug('    start worker:')
                     self.LOG.debug('        name: {}'.format(worker_name))
-                    self.LOG.debug('    fullname: {}'.format(worker_fullname))
+                    self.LOG.debug('  uniquename: {}'.format(worker_uniquename))
                     self.LOG.debug('        port: {}'.format(worker_port))
                     self.LOG.debug('  entrypoint: {}'.format(worker_entrypoint))
                     self.LOG.debug('        venv: {}'.format(worker_venv))
@@ -594,14 +592,17 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     self.LOG.debug('       owner: {}'.format(username))
                 
                 
+                    # create command
+                    command = '{} \"{}\"'.format(python_path, worker_entrypoint)
+                    
                     # start worker
                     worker_stdout = open(stdout_name, "wb")
                     # worker_stderr = open(stderr_name, "wb")
-                    process = subprocess.Popen(cmds, env=env, stdout=worker_stdout, stderr=worker_stdout)
+                    _, _, process = self.exeCommand(command, env=env, stdout=worker_stdout, stderr=worker_stdout)
                 
-                    self._worker_map[worker_name] = {
+                    self._worker_map[worker_uniquename] = {
                         'name': worker_name,
-                        'fullname': worker_fullname,
+                        'fullname': worker_uniquename,
                         'port': worker_port,
                         'entrypoint': worker_entrypoint,
                         'venv': worker_venv,
@@ -611,6 +612,10 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                         #'stderr': worker_stderr,
                         'owner': username,
                         }
+                    
+                    if not username in self._owner_map:
+                        self._owner_map[username] = []
+                    self._owner_map[username].append(worker_uniquename)
             
                 if '-' in worker_port:
                     start_port, end_port = worker_port.split('-')
@@ -619,13 +624,14 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
                     launch_port = [x for x in range(start_port, end_port+1)]
 
                     for port in launch_port:
-                        _worker_name = '{}_{}'.format(worker_name, port)
-                        _worker_fullname = '{}_{}'.format(worker_fullname, port)
+                        _worker_name = worker_name
                         _worker_port = port
-                        _launch_single_worker(_worker_name, _worker_fullname, _worker_port)
+                        _worker_uniquename = '{}@{}:{}'.format(_worker_name, _proxy_name, _worker_port)
+                        _launch_single_worker(_worker_name, _worker_uniquename, _worker_port)
 
                 else:
-                    _launch_single_worker(worker_name, worker_fullname, worker_port)
+                    _worker_uniquename = '{}@{}:{}'.format(worker_name, proxy_name, worker_port)
+                    _launch_single_worker(worker_name, _worker_uniquename, worker_port)
 
             
             status = self._getStatusObject('OK')
@@ -636,7 +642,55 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
             response = common_type.StatusResponse(status=status, error=errcode)
 
         return response
+    
+    
+    def forceShutdownWorkers(self, request, context):
+        self.LOG.debug('receive forceShutdownWorkers request')
+        
+        token = request.token
+        shutdown_all = request.all
+        fullnames = request.fullnames
+        
+        try:
+            self.authenticateToken(token) #throw exception
+            
+            username = self.getUsernameByToken(token)
+            
+            
+            if username in self._owner_map:
+            
+                if shutdown_all:
                 
+                    worker_list = self._owner_map[username].copy()
+                    
+                    for worker_uniquename in worker_list:
+                        self.LOG.debug('shutdown worker: {}'.format(worker_uniquename))
+                        
+                        worker = self._worker_map[worker_uniquename]
+                        self.forceStopProcess(worker['process'])
+                        del self._worker_map[worker_uniquename]
+                    
+                    self._owner_map[username] = []
+                        
+                for worker_uniquename in fullnames:
+                    
+                    worker_list = self._owner_map[username].copy()
+                    
+                    if worker_uniquename in worker_list:
+                        self.LOG.debug('shutdown worker: {}'.format(worker_uniquename))
+                        worker = self._worker_map[worker_uniquename]
+                        self.forceStopProcess(worker['process'])
+                        del self._worker_map[worker_uniquename]
+                        self._owner_map[username].remove(worker_uniquename)
+                
+            status = self._getStatusObject('OK')
+            response = common_type.StatusResponse(status=status)
+            
+        except Exception as e:
+            status, errcode = self._handleError('forceShutdownWorkers', e)
+            response = common_type.PipeResponse(status=status, error=errcode)
+        
+        return response
     
     def createVirtualenv(self, request, context):
         # Input: common_type.CreateVirtualenvRequest
@@ -729,47 +783,12 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer):
             response = common_type.StatusResponse(result=output, status=status, error=errcode)
                 
         return response
-    
-    def getPipe(self, request, context):
-        
-        token = request.token
-        worker_name = request.name
-        
-        try:
-            self.authenticateToken(token)
-            
-            username = self.getUsernameByToken(token)
-        
-            def pipe_iter(self, worker_name):
-            
-                
-                process = self._worker_map[worker_name]
-                
-                while True:
-                    output = process.stdout.readline().decode('utf-8')
-                    if output == '' and p.poll() is not None:
-                        break
-                    error = process.stderr.readline().decode('utf-8')
-                    yield common_type.PipeResponse(stdout=output, stderr=error, exit=False)
-                    
-                rc = p.poll()
-                
-                
-                return common_type.PipeResponse(stdout=output, stderr=error, exit=True, exit_code=rc)
-                
-            
-            return pipe_iter(self, worker_name)
-            
-        except Exception as e:
-            status, errcode = self._handleError('getPipe', e)
-            response = common_type.PipeResponse(status=status, error=errcode)
-            return respones
        
     def __del__(self):
         try:
-            for worker_name in self._worker_map:
+            for worker_uniquename in self._worker_map:
                 try:
-                    worker = self._worker_map[worker_name]
+                    worker = self._worker_map[worker_uniquename]
                     worker['process'].kill()
                     worker['stdout'].close()
                     worker['stderr'].close()
@@ -819,13 +838,13 @@ class ProxyServicer(DefaultProxyServicer):
 class DefaultProxyServer(object):
     
     def __init__(self, max_workers=5,
-                        token_file_path=DEFAULT_TOKEN_PATH,
-                        user_file_path=DEFAULT_USER_PATH,
-                        add_admin_user=ADD_ADMIN_USER,
-                        admin_username=ADMIN_USERNAME,
-                        admin_password=ADMIN_PASSWORD,
-                        allow_guests_register=ALLOW_GUESTS_REGISTER,
-                        reset_user_data=RESET_USER_DATA):
+                       token_file_path=DEFAULT_TOKEN_PATH,
+                       user_file_path=DEFAULT_USER_PATH,
+                       add_admin_user=ADD_ADMIN_USER,
+                       admin_username=ADMIN_USERNAME,
+                       admin_password=ADMIN_PASSWORD,
+                       allow_guests_register=ALLOW_GUESTS_REGISTER,
+                       reset_user_data=RESET_USER_DATA):
     
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
         

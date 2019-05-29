@@ -88,6 +88,11 @@ service Proxy {
         returns (
             grpc_cluster.common.StatusResponse) {}
 
+    rpc forceShutdownWorkers(
+            grpc_cluster.common.ForceShutdownWorkersRequest)
+        returns (
+            grpc_cluster.common.StatusResponse) {}
+
     rpc createVirtualenv(
             grpc_cluster.common.CreateVirtualenvRequest)
         returns (

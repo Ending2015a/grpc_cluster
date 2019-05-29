@@ -199,7 +199,7 @@ class LowEndProxyClient:
                 end_port = int(end_port.strip())
 
                 for port in range(start_port, end_port+1):
-                    _worker_name = '{}_{}'.format(worker_name, port)
+                    _worker_name = worker_name
                     _worker_port = str(port)
  
                     worker = create_worker_config(_worker_name, _worker_port,
@@ -233,6 +233,13 @@ class LowEndProxyClient:
 
         return response
 
+    def _forceShutdownWorkers(self, unique_names=None, shutdown_all=False):
+        request = common_type.ForceShutdownWorkersRequest(token=self.token, all=shutdown_all, fullname=unique_names)
+        
+        response = self.stub.forceShutdownWorkers(request)
+        
+        return response
+
     # already tested
     def _createVirtualenv(self, config):
         path = config.get('path')
@@ -254,10 +261,13 @@ class LowEndProxyClient:
 
 class DefaultProxyClient(LowEndProxyClient):
     def __init__(self, address,
-                        logger_name='DefaultProxyClient',
-                        logger_level='DEBUG'):
+                       server_name,
+                       logger_name='DefaultProxyClient',
+                       logger_level='DEBUG'):
     
         LowEndProxyClient.__init__(self=self, address=address)
+        
+        self.server_name = server_name
         
         loadConfig()
         self.LOG = createLoggerFromExistedLogger(logger_name, logger_level)
@@ -380,14 +390,38 @@ class DefaultProxyClient(LowEndProxyClient):
             self._handleError('launchWorkers', e)
             
             return False
-        
+            
+    def shutdownAllWorkers(self):
+        try:
+            res = self._forceShutdownWorkers(shutdown_all=True)
+            self._assertStatus(res)
+            
+            return True
+        except Exception as e:
+            self._handleError('shutdownAllWorkers', e)
+            
+            return False
+    
+    
+    def shutdownWorkers(self, unique_names):
+        try:
+            res = self._forceShutdownWorkers(unique_names=unique_names)
+            self._assertStatus(res)
+            
+            return True
+    
+        except Exception as e:
+            self._handleError('shutdownWorkers', e)
+            
+            return False
+    
     def createVenv(self, path, params, requirements):
         try:
             assert path != None or path != ''
             
             config = {
                 'path': path,
-		'params': params,
+		        'params': params,
                 'requirements': requirements
             }
             

@@ -225,6 +225,12 @@ message VirtualenvConfiguration {
     repeated string requirements = 3;
 }
 
+message ForceShutdownWorkersRequest {
+    Token token = 1;
+    bool all = 2;
+    repeated string fullname = 3;
+}
+
 
 message LaunchWorkerRequest {
     Token token = 1;

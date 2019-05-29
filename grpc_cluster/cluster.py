@@ -59,6 +59,7 @@ class CustomMasterServicer(DefaultMasterServicer):
 
 class Cluster(object):
 
+    # master
     class Master(object):
         def __init__(self, name, port, 
                             max_workers=10,
@@ -126,7 +127,9 @@ class Cluster(object):
             proxy = ProxyClientWrapper()
             proxy.name = name
             proxy.addr = addr
-            proxy.client = DefaultProxyClient(addr, name)
+            proxy.client = DefaultProxyClient(address=addr, 
+                                              server_name=name, 
+                                              logger_name=name)
             proxy.alive = False
             
             
@@ -152,7 +155,7 @@ class Cluster(object):
                 
             worker = WorkerClientWrapper()
             worker.name = name
-            worker.fullname = proxy_name + '/' + name
+            worker.fullname = '{}@{}:{}'.format(name, proxy_name, port)
             worker.addr = proxy_ip + ':' + port
             
             

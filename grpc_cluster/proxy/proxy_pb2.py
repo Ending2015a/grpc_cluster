@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='grpc_cluster.proxy',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x11proxy/proxy.proto\x12\x12grpc_cluster.proxy\x1a%grpc_cluster/common/common_type.proto2\xe8\x0b\n\x05Proxy\x12k\n\x0euploadFileInfo\x12*.grpc_cluster.common.UploadFileInfoRequest\x1a+.grpc_cluster.common.UploadFileInfoResponse\"\x00\x12]\n\nuploadFile\x12&.grpc_cluster.common.UploadFileRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00(\x01\x12g\n\x0c\x64ownloadFile\x12(.grpc_cluster.common.DownloadFileRequest\x1a).grpc_cluster.common.DownloadFileResponse\"\x00\x30\x01\x12g\n\x10getDirectoryList\x12,.grpc_cluster.common.GetDirectoryListRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12_\n\x0bgetFileInfo\x12\'.grpc_cluster.common.GetFileInfoRequest\x1a%.grpc_cluster.common.FileInfoResponse\"\x00\x12m\n\x13moveFileOrDirectory\x12/.grpc_cluster.common.MoveFileOrDirectoryRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12q\n\x15removeFileOrDirectory\x12\x31.grpc_cluster.common.RemoveFileOrDirectoryRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12\x63\n\x0e\x65xecuteCommand\x12*.grpc_cluster.common.ExecuteCommandRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12V\n\x08register\x12$.grpc_cluster.common.RegisterRequest\x1a\".grpc_cluster.common.TokenResponse\"\x00\x12R\n\x06signIn\x12\".grpc_cluster.common.SignInRequest\x1a\".grpc_cluster.common.TokenResponse\"\x00\x12k\n\x12\x63heckUserExistance\x12..grpc_cluster.common.CheckUserExistanceRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12]\n\x0bsendMessage\x12\'.grpc_cluster.common.SendMessageRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12V\n\x11getWelcomeMessage\x12\x1a.grpc_cluster.common.Token\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12`\n\rlaunchWorkers\x12(.grpc_cluster.common.LaunchWorkerRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12g\n\x10\x63reateVirtualenv\x12,.grpc_cluster.common.CreateVirtualenvRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x11proxy/proxy.proto\x12\x12grpc_cluster.proxy\x1a%grpc_cluster/common/common_type.proto2\xd9\x0c\n\x05Proxy\x12k\n\x0euploadFileInfo\x12*.grpc_cluster.common.UploadFileInfoRequest\x1a+.grpc_cluster.common.UploadFileInfoResponse\"\x00\x12]\n\nuploadFile\x12&.grpc_cluster.common.UploadFileRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00(\x01\x12g\n\x0c\x64ownloadFile\x12(.grpc_cluster.common.DownloadFileRequest\x1a).grpc_cluster.common.DownloadFileResponse\"\x00\x30\x01\x12g\n\x10getDirectoryList\x12,.grpc_cluster.common.GetDirectoryListRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12_\n\x0bgetFileInfo\x12\'.grpc_cluster.common.GetFileInfoRequest\x1a%.grpc_cluster.common.FileInfoResponse\"\x00\x12m\n\x13moveFileOrDirectory\x12/.grpc_cluster.common.MoveFileOrDirectoryRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12q\n\x15removeFileOrDirectory\x12\x31.grpc_cluster.common.RemoveFileOrDirectoryRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12\x63\n\x0e\x65xecuteCommand\x12*.grpc_cluster.common.ExecuteCommandRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12V\n\x08register\x12$.grpc_cluster.common.RegisterRequest\x1a\".grpc_cluster.common.TokenResponse\"\x00\x12R\n\x06signIn\x12\".grpc_cluster.common.SignInRequest\x1a\".grpc_cluster.common.TokenResponse\"\x00\x12k\n\x12\x63heckUserExistance\x12..grpc_cluster.common.CheckUserExistanceRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12]\n\x0bsendMessage\x12\'.grpc_cluster.common.SendMessageRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12V\n\x11getWelcomeMessage\x12\x1a.grpc_cluster.common.Token\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12`\n\rlaunchWorkers\x12(.grpc_cluster.common.LaunchWorkerRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12o\n\x14\x66orceShutdownWorkers\x12\x30.grpc_cluster.common.ForceShutdownWorkersRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x12g\n\x10\x63reateVirtualenv\x12,.grpc_cluster.common.CreateVirtualenvRequest\x1a#.grpc_cluster.common.StatusResponse\"\x00\x62\x06proto3')
   ,
   dependencies=[grpc__cluster_dot_common_dot_common__type__pb2.DESCRIPTOR,])
 
@@ -38,7 +38,7 @@ _PROXY = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   serialized_start=81,
-  serialized_end=1593,
+  serialized_end=1706,
   methods=[
   _descriptor.MethodDescriptor(
     name='uploadFileInfo',
@@ -167,9 +167,18 @@ _PROXY = _descriptor.ServiceDescriptor(
     serialized_options=None,
   ),
   _descriptor.MethodDescriptor(
+    name='forceShutdownWorkers',
+    full_name='grpc_cluster.proxy.Proxy.forceShutdownWorkers',
+    index=14,
+    containing_service=None,
+    input_type=grpc__cluster_dot_common_dot_common__type__pb2._FORCESHUTDOWNWORKERSREQUEST,
+    output_type=grpc__cluster_dot_common_dot_common__type__pb2._STATUSRESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
     name='createVirtualenv',
     full_name='grpc_cluster.proxy.Proxy.createVirtualenv',
-    index=14,
+    index=15,
     containing_service=None,
     input_type=grpc__cluster_dot_common_dot_common__type__pb2._CREATEVIRTUALENVREQUEST,
     output_type=grpc__cluster_dot_common_dot_common__type__pb2._STATUSRESPONSE,

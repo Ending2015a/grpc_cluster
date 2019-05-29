@@ -84,6 +84,11 @@ class ProxyStub(object):
         request_serializer=grpc__cluster_dot_common_dot_common__type__pb2.LaunchWorkerRequest.SerializeToString,
         response_deserializer=grpc__cluster_dot_common_dot_common__type__pb2.StatusResponse.FromString,
         )
+    self.forceShutdownWorkers = channel.unary_unary(
+        '/grpc_cluster.proxy.Proxy/forceShutdownWorkers',
+        request_serializer=grpc__cluster_dot_common_dot_common__type__pb2.ForceShutdownWorkersRequest.SerializeToString,
+        response_deserializer=grpc__cluster_dot_common_dot_common__type__pb2.StatusResponse.FromString,
+        )
     self.createVirtualenv = channel.unary_unary(
         '/grpc_cluster.proxy.Proxy/createVirtualenv',
         request_serializer=grpc__cluster_dot_common_dot_common__type__pb2.CreateVirtualenvRequest.SerializeToString,
@@ -193,6 +198,13 @@ class ProxyServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def forceShutdownWorkers(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def createVirtualenv(self, request, context):
     # missing associated documentation comment in .proto file
     pass
@@ -271,6 +283,11 @@ def add_ProxyServicer_to_server(servicer, server):
       'launchWorkers': grpc.unary_unary_rpc_method_handler(
           servicer.launchWorkers,
           request_deserializer=grpc__cluster_dot_common_dot_common__type__pb2.LaunchWorkerRequest.FromString,
+          response_serializer=grpc__cluster_dot_common_dot_common__type__pb2.StatusResponse.SerializeToString,
+      ),
+      'forceShutdownWorkers': grpc.unary_unary_rpc_method_handler(
+          servicer.forceShutdownWorkers,
+          request_deserializer=grpc__cluster_dot_common_dot_common__type__pb2.ForceShutdownWorkersRequest.FromString,
           response_serializer=grpc__cluster_dot_common_dot_common__type__pb2.StatusResponse.SerializeToString,
       ),
       'createVirtualenv': grpc.unary_unary_rpc_method_handler(
