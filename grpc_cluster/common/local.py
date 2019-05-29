@@ -53,7 +53,7 @@ class LocalServicer:
     
     
     def forceStopAllProcess(self):
-        self.LOG.debug('call forceStopAllProcess: {}'.format(process_number))
+        self.LOG.debug('call forceStopAllProcess: process number={}'.format(process_number))
         for process_number in self.__handles:
             self.__handles[process_number].kill()
             del self.__handles[process_number]

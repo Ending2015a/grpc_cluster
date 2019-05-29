@@ -234,6 +234,7 @@ class LowEndProxyClient:
         return response
 
     def _forceShutdownWorkers(self, unique_names=None, shutdown_all=False):
+        
         request = common_type.ForceShutdownWorkersRequest(token=self.token, all=shutdown_all, fullname=unique_names)
         
         response = self.stub.forceShutdownWorkers(request)
@@ -278,6 +279,7 @@ class DefaultProxyClient(LowEndProxyClient):
         
     
     def _handleError(self, msg, e):
+        print('here' ,msg, e)
         self.LOG.error('exception occurred in {}: {}'.format(msg, str(e)))
         self.LOG.error('  traceback: ')
         self.LOG.error('{}'.format(traceback.format_exc()))

@@ -38,7 +38,7 @@ RESET_USER_DATA=False
 DEFAULT_TOKEN_PATH='token.json'
 DEFAULT_USER_PATH='user.json'
 
-class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer, LocalServiser):
+class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer, LocalServicer):
 
 
     def __init__(self, token_file_path=DEFAULT_TOKEN_PATH,
@@ -649,7 +649,7 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer, Local
         
         token = request.token
         shutdown_all = request.all
-        fullnames = request.fullnames
+        fullnames = request.fullname
         
         try:
             self.authenticateToken(token) #throw exception
