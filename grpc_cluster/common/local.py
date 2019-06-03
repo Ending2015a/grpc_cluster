@@ -54,13 +54,18 @@ class LocalServicer:
         try:
             process = self.__handles[process_number]
             self.LOG.debug('    trying to kill process: {} / pid={}'.format(process_number, process.pid))
-            process.kill()  # kill main process
+
+            try:
+                process.kill()  # kill main process
+            except Exception as e:
+                self.LOG.warning('    some error occurred when trying to kill process: {} / pid={}'.format(process_number, pid))
+                self.LOG.warning('        {}: {}'.format(type(e).__name__, str(e)))
             pgid = os.getpgid(process.pid) # get process group id
             os.killpg(pgid, signal.SIGKILL) # kill process group
             process.communicate() # wait until done
             self.LOG.debug('    process has been killed successfully: {} / pid={}'.format(process_number, process.pid))
         except Exception as e:
-            self.LOG.warning('    some error occurred when trying to kill process: {} / pid={}'.format(process_number, pid))
+            self.LOG.warning('    some error occurred when trying to kill process group: {} / pid={}'.format(process_number, pid))
             self.LOG.warning('        {}: {}'.format(type(e).__name__, str(e)))
 
         del self.__handles[process_number]
@@ -72,13 +77,19 @@ class LocalServicer:
             try:
                 process = self.__handles[process_number]
                 self.LOG.debug('    trying to kill process: {} / pid={}'.format(process_number, process.pid))
-                process.kill()  # kill main process
+                try:
+                    process.kill()  # kill main process
+                except Exception as e:
+
+                    self.LOG.warning('    some error occurred when trying to kill process: {} / pid={}'.format(process_number, pid))
+                    self.LOG.warning('        {}: {}'.format(type(e).__name__, str(e)))
+
                 pgid = os.getpgid(process.pid) # get process group id
                 os.killpg(pgid, signal.SIGKILL) # kill process group
                 self.__handles[process_number].communicate() # wait until done
                 self.LOG.debug('    process has been killed successfully: {} / pid={}'.format(process_number, process.pid))
             except Exception as e:
-                self.LOG.warning('    some error occurred when trying to kill process: {} / pid={}'.format(process_number, pid))
+                self.LOG.warning('    some error occurred when trying to kill process group: {} / pid={}'.format(process_number, pid))
                 self.LOG.warning('        {}: {}'.format(type(e).__name__, str(e)))
 
             del self.__handles[process_number]
