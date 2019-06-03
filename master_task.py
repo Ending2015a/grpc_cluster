@@ -2,7 +2,7 @@ import random
 import time
 from grpc_cluster import Cluster
 
-config_path = 'cluster_config.yml'
+config_path = 'cluster_config.yml.example'
 
 cluster = Cluster(config_path)
 
@@ -37,7 +37,6 @@ for i in range(100):
     # map actions to workers and set timeout = 10 (sec)
     print('map actions to workers')
     assert cluster.map(actions, timeout=13)
-
 
 
     print('wait for results')

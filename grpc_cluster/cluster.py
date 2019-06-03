@@ -152,13 +152,14 @@ class Cluster(object):
                         return None
                     return self._task_queue.popleft()
                 
-                def getWelcomeRequest(self, wait=False):
-                    while len(self._welcome_request_queue) == 0:
-                        if wait:
-                            self._receive_welcome_request_event.wait()
-                            self._receive_welcome_request_event.clear()
-                        else:
-                            return None
+                def getWelcomeRequest(self, wait=False, timeout=None):
+                    if wait:
+                        self._receive_welcome_request_event.wait(timeout)
+                        self._receive_welcome_request_event.clear()
+                    
+                    if len(self._welcome_request_queue) == 0:
+                        return None
+
                     return self._welcome_request_queue.popleft()
                     
                 def generateTaskIDs(self, count=1):
@@ -444,15 +445,19 @@ class Cluster(object):
             self.LOG.debug('    waiting for receiving welcome messages from all workers') 
             self._wait_for_receiving_welcome_message()
         
-        def _wait_for_receiving_welcome_message(self, worker_list=None):
+        def _wait_for_receiving_welcome_message(self, worker_list=None, timeout=60):
         
             if worker_list == None:
                 worker_list = self.newly_added_workers
         
             while len(worker_list) > 0:
                 
-                token = self.helper.getWelcomeRequest(wait=True)
+                token = self.helper.getWelcomeRequest(wait=True, timeout=timeout)
                 
+                if token is None:
+                    self.LOG.warning('timeout occurred when waiting for receiving welcome requests from workers')
+                    break
+
                 if not token in self._worker_tokens:
                     self.LOG.warning('receive unknown token: {}'.format(token))
                     
@@ -469,6 +474,12 @@ class Cluster(object):
                     
                     if worker_fullname in worker_list:
                         worker_list.remove(worker_fullname)
+
+            if len(self.newly_added_workers) > 0:
+                self.poll_workers(self.newly_added_workers)
+            self.newly_added_workers = []
+
+
                     
         def get_proxy_num(self):
             return len(self._proxy_client)
@@ -511,14 +522,30 @@ class Cluster(object):
             if worker == None:
                 return None
             
-            worker.alive = False if worker.client.welcome()==None else True
+            worker.alive = False if worker.client.welcome() is None else True
             if worker.alive:
                 self.LOG.info('    worker still alive: {}'.format(fullname))
             else:
                 self.LOG.info('    worker no response: {}'.format(fullname))
                 
             return worker.alive
-            
+        
+        def poll_workers(self, fullnames):
+
+            self.LOG.debug('call poll_workers: {}'.format(fullnames))
+
+            for fullname in fullnames:
+                worker = self.get_worker(fullname)
+                if worker == None:
+                    return None
+
+                worker.alive = False if worker.client.welcome() is None else True
+                if worker.alive:
+                    self.LOG.info('    worker still alive: {}'.format(fullname))
+                else:
+                    self.LOG.info('    worker no response: {}'.format(fullname))
+
+
         def poll_proxy(self, proxy_name):
             self.LOG.debug('call poll_proxy: {}'.format(proxy_name))
             
@@ -526,7 +553,7 @@ class Cluster(object):
             if proxy == None:
                 return None
             
-            proxy.alive = False if proxy.client.welcome()==None else True
+            proxy.alive = False if proxy.client.welcome() is None else True
             
             if proxy.alive:
                 self.LOG.info('    proxy still alive: {}'.format(proxy_name))
@@ -540,7 +567,7 @@ class Cluster(object):
             
             for proxy_name in self._proxy_client:
                 proxy = self._proxy_client[proxy_name]
-                proxy.alive = False if proxy.client.welcome()==None else True
+                proxy.alive = False if proxy.client.welcome() is None else True
                 
                 if proxy.alive:
                     self.LOG.debug('    proxy still alive: {}'.format(proxy_name))
@@ -550,7 +577,7 @@ class Cluster(object):
                 if proxy_name in self._worker_client:
                     for worker_name in self._worker_client[proxy_name]:
                         worker = self._worker_client[proxy_name][worker_name]
-                        worker.alive = False if worker.client.welcome()==None else True
+                        worker.alive = False if worker.client.welcome() is None else True
                         if worker.alive:
                             self.LOG.debug('    worker still alive: {}'.format(worker_name))
                         else:
@@ -655,7 +682,11 @@ class Cluster(object):
                         worker.tasks.append(int(ID))
                         worker.working = True
                         self._idle_list.remove(fullname)
-                
+
+                    else:
+                        self.LOG.warning('    failed to send task to worker: task_ID={} / worker={}'.format(ID, fullname))
+                        self.helper.addTaskToBuffer(ID, tag, None)
+
                 for proxy_name in self._worker_client:
                     for worker_name in self._worker_client[proxy_name]:
                         worker = self._worker_client[proxy_name][worker_name]

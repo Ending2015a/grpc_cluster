@@ -5,11 +5,11 @@ master:
 proxy:
     - name: "proxy01"
       addr: "localhost:50040"
-      default_entrypoint: "run.py"
+      default_entrypoint: "worker_task.py"
       default_venv: "atari"
       workers:
           - name: "slave"
-            port: 6660-6662
+            port: 6660-6663
 venv:
     - name: "atari"
       params:

@@ -688,7 +688,7 @@ class DefaultProxyServicer(pb2_grpc.ProxyServicer, AuthenticationServicer, Local
             
         except Exception as e:
             status, errcode = self._handleError('forceShutdownWorkers', e)
-            response = common_type.PipeResponse(status=status, error=errcode)
+            response = common_type.StatusResponse(status=status, error=errcode)
         
         return response
     
