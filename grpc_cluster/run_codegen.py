@@ -109,30 +109,31 @@ if __name__ == '__main__':
 
     include_paths = [
             findIncludePath(),
-            '{}/grpc_cluster/common'.format(proto_root),
-            '{}/grpc_cluster/proxy'.format(proto_root),
-            '{}/grpc_cluster/master'.format(proto_root),
-            '{}/grpc_cluster/worker'.format(proto_root),
-            '{}/grpc_cluster'.format(proto_root),
+            '{}/grpc_cluster/rpc/common'.format(proto_root),
+            '{}/grpc_cluster/rpc/proxy'.format(proto_root),
+            '{}/grpc_cluster/rpc/master'.format(proto_root),
+            '{}/grpc_cluster/rpc/worker'.format(proto_root),
+            '{}/grpc_cluster/rpc'.format(proto_root),
             '{}'.format(proto_root)]
 
     # service
+    # path = os.path.join(gen_path, proto)
     gencode(proto='proxy/proxy.proto',
-            gen_path='./',
+            gen_path='./rpc/',
             include_paths=include_paths)
     gencode(proto='master/master.proto',
-            gen_path='./',
+            gen_path='./rpc/',
             include_paths=include_paths)
     gencode(proto='worker/worker.proto',
-            gen_path='./',
+            gen_path='./rpc/',
             include_paths=include_paths)
             
     # message
     gencode(proto='worker/worker_type.proto',
-            gen_path='./',
+            gen_path='./rpc/',
             include_paths=include_paths)
     gencode(proto='common/common_type.proto',
-            gen_path='./',
+            gen_path='./rpc/',
             include_paths=include_paths)
     
 
