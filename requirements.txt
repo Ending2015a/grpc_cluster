@@ -1,5 +1,5 @@
 --no-binary=protobuf protobuf
 pyyaml
-grpc
+grpcio
 dill
 
