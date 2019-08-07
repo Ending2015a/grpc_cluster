@@ -1,25 +1,24 @@
-from grpc_tools import protoc
-import subprocess
 import os
-import logger
+import sys
+import time
 import logging
+import subprocess
 
-LOG = None
-#LEVEL = logging.DEBUG
+from grpc_tools import protoc
+
+from common import utils 
+
+LOG = logging.getLogger()
+
+
 
 def makeDirectories(path, log=False):
-    
-    try:
-        if log:
-            LOG.info('creating directories:')
-            LOG.info('    {}'.format(path))
+    if log:
+        LOG.info('creating directories:')
+        LOG.info('    {}'.format(path))
 
-        # create nested directories
-        os.makedirs(path)
-
-
-    except OSError:
-        pass
+    # create nested directories
+    utils.makedirs(path)
 
 '''
 def createLogger():
@@ -103,37 +102,41 @@ def gencode(proto, gen_path, include_paths):
 
 if __name__ == '__main__':
 
-    logger.loadConfig()
-    LOG = logger.createLoggerFromExistedLogger('run_codegen', 'INFO')
     proto_root = './proto'
 
     include_paths = [
             findIncludePath(),
-            '{}/grpc_cluster/rpc/common'.format(proto_root),
-            '{}/grpc_cluster/rpc/proxy'.format(proto_root),
-            '{}/grpc_cluster/rpc/master'.format(proto_root),
-            '{}/grpc_cluster/rpc/worker'.format(proto_root),
-            '{}/grpc_cluster/rpc'.format(proto_root),
+            '{}/grpc_cluster/service/rpc/common'.format(proto_root),
+            '{}/grpc_cluster/service/rpc/proxy'.format(proto_root),
+            '{}/grpc_cluster/service/rpc/master'.format(proto_root),
+            '{}/grpc_cluster/service/rpc/worker'.format(proto_root),
+            '{}/grpc_cluster/service/rpc/auth'.format(proto_root),
+            '{}/grpc_cluster/service/rpc'.format(proto_root),
             '{}'.format(proto_root)]
 
     # service
     # path = os.path.join(gen_path, proto)
     gencode(proto='proxy/proxy.proto',
-            gen_path='./rpc/',
+            gen_path='./service/rpc/',
             include_paths=include_paths)
     gencode(proto='master/master.proto',
-            gen_path='./rpc/',
+            gen_path='./service/rpc/',
             include_paths=include_paths)
     gencode(proto='worker/worker.proto',
-            gen_path='./rpc/',
+            gen_path='./service/rpc/',
             include_paths=include_paths)
-            
+    gencode(proto='auth/jwt_auth.proto',
+            gen_path='./service/rpc/',
+            include_paths=include_paths)
+
     # message
     gencode(proto='worker/worker_type.proto',
-            gen_path='./rpc/',
+            gen_path='./service/rpc/',
+            include_paths=include_paths)
+    gencode(proto='auth/jwt_auth_type.proto',
+            gen_path='./service/rpc/',
             include_paths=include_paths)
     gencode(proto='common/common_type.proto',
-            gen_path='./rpc/',
+            gen_path='./service/rpc/',
             include_paths=include_paths)
-    
 

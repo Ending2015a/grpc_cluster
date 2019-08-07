@@ -1,17 +1,17 @@
 master:
     name: "master00"
-    addr: "localhost:9999"
+    addr: "127.0.0.1:9999"
 
 proxy:
     - name: "proxy01"
-      addr: "localhost:50040"
+      addr: "127.0.0.1:50040"
       default_entrypoint: "worker_task.py"
       default_venv: "atari"
       workers:
           - name: "slave"
             port: 6660-6663
 venv:
-    - name: "atari"
+    - name: "mario_env"
       params:
           - python=python3.6
       requirements:

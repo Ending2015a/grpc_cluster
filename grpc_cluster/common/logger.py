@@ -1,3 +1,57 @@
+import os
+import sys
+import time
+import logging
+
+from . import utils
+
+class DefaultLoggingConfig:
+    @staticmethod
+    def Use(filename='training.log', level='INFO', output_to_file=True):
+
+        config = {}
+        config['version'] = 1
+        config['formatters'] = {
+                'default': {
+                    'format': '[%(asctime)s|%(threadName)s|%(levelname)s:%(name)s]: %(message)s',
+                    'datefmt': '%Y-%m-%d %H:%M:%S'
+                    }
+                }
+
+        config['handlers'] = {
+                'stream': {
+                    'level': level,
+                    'class': 'logging.StreamHandler',
+                    'stream': 'ext://sys.stdout',
+                    'formatter': 'default'
+                    }
+                }
+
+        if output_to_file:
+            config['handlers']['file'] = { 
+                    'level': level,
+                    'filename': filename,
+                    'class': 'logging.FileHandler',
+                    'formatter': 'default',
+                    }
+
+        config['root'] = {
+                'level': level,
+                'handlers': ['stream']
+                }
+
+        if output_to_file:
+            config['root']['handlers'].append('file')
+
+
+        dictConfig(config)
+
+
+__all__ = [
+        DefaultLoggerConfig.__name__
+        ]
+
+'''
 import logging
 import logging.config
 import datetime
@@ -60,3 +114,5 @@ def createLoggerFromExistedLogger(logger_name, existed_logger_name=None, log_to_
     #    LOG.addHandler(handler)
 
     return LOG
+
+'''

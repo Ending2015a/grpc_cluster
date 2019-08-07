@@ -7,6 +7,6 @@ except ImportError:
     __path__ = __import('pkgutil').extend_path(__path__, __name__)
 
 
-from .cluster import Cluster
+#from .cluster import Cluster
 
-__all__ = ['Cluster']
+#__all__ = ['Cluster']

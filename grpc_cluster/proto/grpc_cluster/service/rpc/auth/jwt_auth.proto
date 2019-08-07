@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package grpc_cluster.service.rpc.auth;
+
+import "grpc_cluster/service/rpc/auth/jwt_auth_type.proto";
+
+service Authentication {
+
+    rpc Login(
+            grpc_cluster.service.rpc.auth.LoginRequest)
+        returns (
+            grpc_cluster.service.rpc.auth.LoginResponse) {}
+}
